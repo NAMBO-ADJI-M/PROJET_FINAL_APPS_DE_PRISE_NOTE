@@ -7,13 +7,12 @@ Application Flutter développée dans le cadre du programme **D-CLIC niveau Inte
 ## 🚀 Fonctionnalités
 
 - Connexion et inscription avec validation des champs
-- Gestion des notes (ajout, modification, suppression)
 - Système de question secrète pour récupération de mot de passe
-- Interface responsive et accessible
+- Ajout, modification, suppression et validation des notes
+- Affichage des notes en tête de liste dès leur création
+- Filtrage dynamique : Toutes / En cours / Terminées
+- Interface responsive avec composants réutilisables
 - Stockage local via SQLite
-
----
-
 ## 📦 Installation
 
 ### Prérequis
@@ -60,11 +59,11 @@ Les widgets sont modulaires et conçus pour être réutilisables.
 
 ## 🔐 Sécurité
 
-- Les mots de passe ne sont pas normalisés ni hashés par défaut (neutralité assurée)
-- Validation stricte des champs
+Validation stricte des champs (email, mot de passe, question secrète)
 
+Neutralité assurée : les mots de passe ne sont pas hashés par défaut
 
----
+Navigation sécurisée entre les écrans
 
 ## 👨‍💻 Auteur
 
@@ -77,3 +76,4 @@ Développeur Flutter passionné par la pédagogie, la modularité et la sécurit
 
 Ce projet est open-source sous licence MIT.
 ```bash
+
