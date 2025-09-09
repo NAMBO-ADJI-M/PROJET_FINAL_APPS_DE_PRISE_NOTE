@@ -94,6 +94,11 @@ class _ListeNoteScreenState extends State<ListeNoteScreen> {
       ),
     );
   }
+  String _capitalize(String input) {
+  if (input.isEmpty) return '';
+  return input[0].toUpperCase() + input.substring(1).toLowerCase();
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -131,16 +136,17 @@ class _ListeNoteScreenState extends State<ListeNoteScreen> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                _utilisateur?.username ?? '',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+  child: Text(
+    _utilisateur != null ? _capitalize(_utilisateur!.username) : '',
+    style: const TextStyle(
+      fontSize: 22,
+      fontWeight: FontWeight.bold,
+      color: Colors.white,
+    ),
+    overflow: TextOverflow.ellipsis,
+  ),
+),
+
           ],
         ),
         elevation: 4,
@@ -184,7 +190,7 @@ class _ListeNoteScreenState extends State<ListeNoteScreen> {
                           title: Text(
                             note.title,
                             style: TextStyle(
-                              decoration: note.isDone ? TextDecoration.lineThrough : null,
+                          
                               color: note.isDone ? Colors.grey : Colors.black87,
                             ),
                           ),

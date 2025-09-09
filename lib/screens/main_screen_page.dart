@@ -5,6 +5,7 @@ import '../database/database_manager.dart';
 import '../user/user.dart';
 import '../user/note.dart';
 
+
 class MainPageScreen extends StatefulWidget {
   final User currentUser;
 
@@ -50,6 +51,11 @@ class _MainPageScreenState extends State<MainPageScreen> {
       _setLoading(false);
     }
   }
+  String _capitalize(String input) {
+  if (input.isEmpty) return '';
+  return input[0].toUpperCase() + input.substring(1);
+}
+
 
   Future<void> _addNote() async {
     final user = await DatabaseManager.instance.getConnectedUser();
@@ -65,6 +71,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
       _showSnackBar('Veuillez saisir un titre.');
       return;
     }
+
 
     final nouvelleNote = Note(
       userId: user.id!,
@@ -217,7 +224,8 @@ class _MainPageScreenState extends State<MainPageScreen> {
             child: Column(
               children: [
                 Text(
-                  'Bienvenue ${widget.currentUser.username}',
+                  'Bienvenue ${_capitalize(widget.currentUser.username)}'
+,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 25,
@@ -325,14 +333,15 @@ class _MainPageScreenState extends State<MainPageScreen> {
                                     196,
                                   ),
                                   child: ListTile(
-                                    leading: Icon(
-                                      note.isDone
-                                          ? Icons.check_circle
-                                          : Icons.circle_outlined,
-                                      color: note.isDone
-                                          ? Colors.green
-                                          : Colors.grey,
-                                    ),
+                                    leading: IconButton(
+  icon: Icon(
+    note.isDone ? Icons.check_circle : Icons.circle_outlined,
+    color: note.isDone ? Colors.green : Colors.grey,
+  ),
+  onPressed: () => _toggleNote(note),
+  tooltip: note.isDone ? 'Marquer comme non terminée' : 'Marquer comme terminée',
+),
+
                                     title: Text(
                                       note.title,
                                       style: TextStyle(

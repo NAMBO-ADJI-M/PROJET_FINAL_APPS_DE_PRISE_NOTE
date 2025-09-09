@@ -24,17 +24,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     "Quel est le nom de votre école primaire ?",
   ];
 
-  final List<String> _answers = [
-    "Lomé",
-    "Tigre",
-    "Koffi",
-    "Étoile",
-    "Autre",
-  ];
+  final List<String> _answers = ["Lomé", "Tigre", "Koffi", "Étoile", "Autre"];
 
   String? _selectedQuestion;
   String? _selectedAnswer;
   bool _isRegistering = false;
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -60,7 +57,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isRegistering = true);
 
-    final username = _usernameController.text.trim().toLowerCase();
+    final rawUsername = _usernameController.text.trim();
+    final username = rawUsername.toLowerCase();
     final password = _passwordController.text;
     final question = _selectedQuestion;
     final answer = _selectedAnswer == "Autre"
@@ -68,7 +66,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         : _selectedAnswer;
 
     try {
-      final existingUser = await DatabaseManager.instance.getUserByUsername(username);
+      final existingUser = await DatabaseManager.instance.getUserByUsername(
+        username,
+      );
       if (!mounted) return;
 
       if (existingUser != null) {
@@ -92,9 +92,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (!mounted) return;
 
-      Navigator.pop(context); // Retour à l'écran précédent
-      await Future.delayed(const Duration(milliseconds: 300));
       _showMessage("✅ Inscription réussie");
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+
+      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       _showMessage("Erreur : $e");
@@ -131,45 +133,99 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       controller: _usernameController,
                       decoration: const InputDecoration(
                         labelText: "Nom d'utilisateur",
-                        prefixIcon: Icon(Icons.person_outline, color: Colors.blue),
+                        prefixIcon: Icon(
+                          Icons.person_outline,
+                          color: Colors.blue,
+                        ),
                       ),
-                      validator: (v) => v == null || v.trim().isEmpty ? "Champ requis" : null,
+                      validator: (v) =>
+                          v == null || v.trim().isEmpty ? "Champ requis" : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
                         labelText: "Mot de passe",
-                        prefixIcon: Icon(Icons.lock_outline, color: Colors.blue),
+                        prefixIcon: const Icon(
+                          Icons.lock_outline,
+                          color: Colors.blue,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.blue,
+                          ),
+                          onPressed: () {
+                            setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            );
+                          },
+                        ),
                       ),
-                      validator: (v) => v != null && v.length >= 6 ? null : "Min. 6 caractères requis",
+                      validator: (v) => v != null && v.length >= 6
+                          ? null
+                          : "Min. 6 caractères requis",
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _confirmPasswordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _obscureConfirmPassword,
+                      decoration: InputDecoration(
                         labelText: "Confirmer le mot de passe",
-                        prefixIcon: Icon(Icons.lock_reset, color: Colors.blue),
+                        prefixIcon: const Icon(
+                          Icons.lock_reset,
+                          color: Colors.blue,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.blue,
+                          ),
+                          onPressed: () {
+                            setState(
+                              () => _obscureConfirmPassword =
+                                  !_obscureConfirmPassword,
+                            );
+                          },
+                        ),
                       ),
-                      validator: (v) => v == _passwordController.text ? null : "Les mots de passe ne correspondent pas",
+                      validator: (v) => v == _passwordController.text
+                          ? null
+                          : "Les mots de passe ne correspondent pas",
                     ),
                     const SizedBox(height: 15),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
-                      items: _questions.map((q) => DropdownMenuItem(value: q, child: Text(q))).toList(),
-                      onChanged: (val) => setState(() => _selectedQuestion = val),
+                      items: _questions
+                          .map(
+                            (q) => DropdownMenuItem(value: q, child: Text(q)),
+                          )
+                          .toList(),
+                      onChanged: (val) =>
+                          setState(() => _selectedQuestion = val),
                       decoration: const InputDecoration(
                         labelText: "Question secrète",
-                        prefixIcon: Icon(Icons.help_outline, color: Colors.blue),
+                        prefixIcon: Icon(
+                          Icons.help_outline,
+                          color: Colors.blue,
+                        ),
                       ),
-                      validator: (v) => v == null || v.isEmpty ? "Sélection requise" : null,
+                      validator: (v) =>
+                          v == null || v.isEmpty ? "Sélection requise" : null,
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
-                      items: _answers.map((a) => DropdownMenuItem(value: a, child: Text(a))).toList(),
+                      items: _answers
+                          .map(
+                            (a) => DropdownMenuItem(value: a, child: Text(a)),
+                          )
+                          .toList(),
                       onChanged: (val) {
                         setState(() {
                           _selectedAnswer = val;
@@ -178,9 +234,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                       decoration: const InputDecoration(
                         labelText: "Réponse secrète",
-                        prefixIcon: Icon(Icons.vpn_key_outlined, color: Colors.blue),
+                        prefixIcon: Icon(
+                          Icons.vpn_key_outlined,
+                          color: Colors.blue,
+                        ),
                       ),
-                      validator: (v) => v == null || v.isEmpty ? "Sélection requise" : null,
+                      validator: (v) =>
+                          v == null || v.isEmpty ? "Sélection requise" : null,
                     ),
                     if (_selectedAnswer == "Autre") ...[
                       const SizedBox(height: 8),
@@ -190,7 +250,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           labelText: "Réponse personnalisée",
                           prefixIcon: Icon(Icons.edit_note, color: Colors.blue),
                         ),
-                        validator: (v) => v == null || v.isEmpty ? "Veuillez entrer une réponse" : null,
+                        validator: (v) => v == null || v.isEmpty
+                            ? "Veuillez entrer une réponse"
+                            : null,
                       ),
                     ],
                     const SizedBox(height: 20),
@@ -204,14 +266,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             elevation: 5,
                             backgroundColor: Colors.blue,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           label: _isRegistering
                               ? const SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Text("S'inscrire"),
                         ),
