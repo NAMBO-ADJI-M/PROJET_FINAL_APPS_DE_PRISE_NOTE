@@ -36,7 +36,7 @@ flutter run
 ```plaintext
 lib/
 ├── database/           # Gestion SQLite
-├── screens/            # Écrans Login, Register, Main
+├── screens/            # Écrans Login, Register, Main, Liste
 ├── user/               # Modèles utilisateur et note
 ├── widgets/            # Composants réutilisables
 └── main.dart           # Point d’entrée
@@ -76,4 +76,5 @@ Développeur Flutter passionné par la pédagogie, la modularité et la sécurit
 
 Ce projet est open-source sous licence MIT.
 ```bash
+
 
