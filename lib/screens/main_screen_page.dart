@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:prise_de_note/screens/liste_notes.dart';
 import '../database/database_manager.dart';
 import '../user/user.dart';
 import '../user/note.dart';
@@ -25,9 +26,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
   }
 
   Future<void> _loadNotes() async {
-    setState(() {
-      _isLoading = true; // Indique le début du chargement
-    });
+    setState(() => _isLoading = true);
 
     final userId = widget.currentUser.id;
     if (userId == null) {
@@ -38,6 +37,10 @@ class _MainPageScreenState extends State<MainPageScreen> {
 
     try {
       final notes = await DatabaseManager.instance.getNotesByUserId(userId);
+
+      // ✅ Tri par date de création décroissante
+      notes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
       if (mounted) {
         setState(() => _notes = notes);
       }
@@ -49,26 +52,34 @@ class _MainPageScreenState extends State<MainPageScreen> {
   }
 
   Future<void> _addNote() async {
-    final text = _controller.text.trim();
-    final userId = widget.currentUser.id;
+    final user = await DatabaseManager.instance.getConnectedUser();
 
-    if (text.isEmpty || userId == null) {
-      _showSnackBar('Veuillez entrer un titre valide.');
+    if (user == null || user.id == null) {
+      _showSnackBar('Erreur: utilisateur non connecté.');
       return;
     }
 
-    final formattedDate = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
-    final newNote = Note(
-      userId: userId,
-      title: text,
+    final titreNote = _controller.text.trim();
+
+    if (titreNote.isEmpty) {
+      _showSnackBar('Veuillez saisir un titre.');
+      return;
+    }
+
+    final nouvelleNote = Note(
+      userId: user.id!,
+      title: titreNote,
       isDone: false,
-      createdAt: formattedDate,
+      createdAt: DateTime.now().toIso8601String(),
+      deadline: null,
     );
 
     await _performAsyncOperation(() async {
-      await DatabaseManager.instance.insertNote(newNote);
+      await DatabaseManager.instance.insertNote(nouvelleNote);
       _controller.clear();
-      await _loadNotes();
+      setState(() {
+        _notes.insert(0, nouvelleNote); // ✅ Ajout en tête
+      });
     }, 'Erreur lors de l\'ajout de la note.');
   }
 
@@ -127,17 +138,6 @@ class _MainPageScreenState extends State<MainPageScreen> {
     }
   }
 
-  void _showSnackBar(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Center(child: Text(message)),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
-  }
-
   Future<void> _performAsyncOperation(
     Future<void> Function() operation,
     String errorMessage,
@@ -151,12 +151,29 @@ class _MainPageScreenState extends State<MainPageScreen> {
 
   void _setLoading(bool isLoading) {
     if (mounted) {
-      setState(() {
-        _isLoading = isLoading;
-      });
+      setState(() => _isLoading = isLoading);
     }
   }
 
+  void _showSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Center(child: Text(message)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  String _formaterDate(String isoDate) {
+    try {
+      final date = DateTime.parse(isoDate);
+      return DateFormat('dd/MM/yyyy à HH:mm').format(date);
+    } catch (e) {
+      return 'Date invalide';
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,6 +191,22 @@ class _MainPageScreenState extends State<MainPageScreen> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
+      floatingActionButton: FloatingActionButton(
+    backgroundColor: Colors.blue,
+    onPressed: () {
+      DatabaseManager.instance.setConnectedUser(widget.currentUser);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ListeNoteScreen(notes: _notes),
+        ),
+      );
+    },
+    tooltip: 'Voir toutes les notes',
+    child: const Icon(Icons.list, color: Colors.white),
+  ),
+  floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat, // ✅ Centrage
+
       body: GestureDetector(
         onTap: () =>
             FocusScope.of(context).unfocus(), // Ferme le clavier au tap
@@ -309,7 +342,7 @@ class _MainPageScreenState extends State<MainPageScreen> {
                                       ),
                                     ),
                                     subtitle: Text(
-                                      '${note.createdAt},',
+                                      '${_formaterDate(note.createdAt)},',
                                       style: const TextStyle(fontSize: 10),
                                     ),
                                     trailing: Row(
